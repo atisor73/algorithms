@@ -1,0 +1,14 @@
+Metadata-Version: 2.1
+Name: algorithms
+Version: 0.0.1
+Summary: Algorithms is a local package for functions I keep using but am too tired to rewrite or can't seem to remember.
+Home-page: UNKNOWN
+Author: Rosita Fu
+Author-email: rosita.fu99@gmail.com
+License: MIT
+Platform: UNKNOWN
+Classifier: Programming Language :: Python :: 3
+Classifier: License :: OSI Approved :: MIT License
+
+Algorithms is a local package for functions I keep using but am too tired to rewrite or can't seem to remember.
+

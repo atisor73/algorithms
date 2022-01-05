@@ -1,0 +1,9 @@
+README.md
+setup.py
+algorithms/__init__.py
+algorithms/audio.py
+algorithms.egg-info/PKG-INFO
+algorithms.egg-info/SOURCES.txt
+algorithms.egg-info/dependency_links.txt
+algorithms.egg-info/requires.txt
+algorithms.egg-info/top_level.txt
