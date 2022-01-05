@@ -5,6 +5,8 @@ Algorithms is a local package for functions I keep using but am too tired to rew
 from .audio import *
 from .list import *
 from .colors import *
+from .numerics import *
+from .distributions import *
 
 __author__ = "Rosita Fu"
 __version__ = "0.0.1"
