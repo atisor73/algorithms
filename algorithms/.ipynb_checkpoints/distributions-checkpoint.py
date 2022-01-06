@@ -194,3 +194,4 @@ def find_weibull(L, U, Lppf=.005, Uppf=.995, bulk=None, precision=4):
 
     return np.round(α, precision), np.round(σ, precision)
 
+
