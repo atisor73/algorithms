@@ -29,6 +29,8 @@ def style(p, autohide=False):
     if autohide: p.toolbar.autohide=True
     return p
 
+from .prior_inverse_search import *
+
 # *********************************** COLORS ***********************************
 purple = "#aa6abe"
 lightpurple = "#BB8FCE"
