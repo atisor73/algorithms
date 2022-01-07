@@ -1,3 +1,34 @@
+import os
+import sys
+
+import numpy as np
+import pandas as pd
+import scipy.optimize
+import scipy.stats as st
+import scipy.special
+
+import bokeh.io
+bokeh.io.output_notebook()
+
+import panel as pn
+pn.extension()
+
+import warnings
+warnings.filterwarnings('ignore')
+
+def style(p, autohide=False):
+    p.title.text_font="Helvetica"
+    p.title.text_font_size="16px"
+    p.title.align="center"
+    p.xaxis.axis_label_text_font="Helvetica"
+    p.yaxis.axis_label_text_font="Helvetica"
+    
+    p.xaxis.axis_label_text_font_size="13px"
+    p.yaxis.axis_label_text_font_size="13px"
+    p.background_fill_alpha = 0
+    if autohide: p.toolbar.autohide=True
+    return p
+
 # *********************************** COLORS ***********************************
 purple = "#aa6abe"
 lightpurple = "#BB8FCE"
