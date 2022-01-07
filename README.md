@@ -8,7 +8,7 @@ A small collection of functions.
 
 
 ```python
-import algo
+import algorithms as algo
 
 # arbitrary
 algo.beep(t=2)                     # audio beep for t seconds
