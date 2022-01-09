@@ -1,7 +1,7 @@
 import numpy as np
 from IPython.lib.display import Audio
 
-def beep(t=2):
+def beep(t=1):
     '''
     Plays sound in jupyter code cell.
     ----------

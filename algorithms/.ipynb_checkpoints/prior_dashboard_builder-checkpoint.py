@@ -64,8 +64,8 @@ def _pdfcdf_2p2b_plotter(
     if pad_left:
         x_range = (min(x_full) - 0.04*np.ptp(x_full), max(x_full))
         y_range = (-0.07, 1.05)
-    p_pdf = bokeh.plotting.figure(title="pdf", width=350, height=220, x_range=x_range, )
-    p_cdf = bokeh.plotting.figure(title="cdf", width=350, height=220, x_range=x_range, y_range=y_range)
+    p_pdf = bokeh.plotting.figure(title="pdf", width=350, height=220, x_range=x_range, tools='pan,box_zoom,wheel_zoom,reset')
+    p_cdf = bokeh.plotting.figure(title="cdf", width=350, height=220, x_range=x_range, y_range=y_range, tools='pan,box_zoom,wheel_zoom,reset')
     
     # shading pdf
     p_pdf.patch(x_patch, pdf_patch, color='#eaeaea')
@@ -95,8 +95,9 @@ def _pdfcdf_1p1b_plotter(
     x_full, pdf_full, cdf_full,
     color="green"
 ):
-    p_pdf = bokeh.plotting.figure(title="pdf", width=350, height=220, x_range=(min(x_full), max(x_full)))
-    p_cdf = bokeh.plotting.figure(title="cdf", width=350, height=220, x_range=(min(x_full), max(x_full)), y_range=(-0.05, 1.05))
+    x_range = (min(x_full), max(x_full))
+    p_pdf = bokeh.plotting.figure(title="pdf", width=350, height=220, x_range=x_range, tools='pan,box_zoom,wheel_zoom,reset')
+    p_cdf = bokeh.plotting.figure(title="cdf", width=350, height=220, x_range=x_range, y_range=(-0.05, 1.05), tools='pan,box_zoom,wheel_zoom,reset')
     
     # shading pdf
     p_pdf.patch(x_patch, pdf_patch, color='#eaeaea')
@@ -232,7 +233,7 @@ def dashboard_lognormal(L, U, bulk):
     x = np.linspace(L, U, 1_000)
     x_low, x_high = scipy.stats.lognorm.ppf([0.05, 0.95], σ, loc=0, scale=np.exp(μ))
     x_full = np.linspace(0, max(x_high, U+padding), 1_000)
-    # x_full = np.linspace(min(L-padding,x_low), max(x_high, U+padding), 1_000)
+
     pdf_full = f_pdf(x_full, μ, σ)
     cdf_full = f_cdf(x_full, μ, σ)
 
@@ -314,15 +315,24 @@ bulk_slider_invgamma = pn.widgets.FloatSlider(name="bulk %", value=95, start=50,
 @pn.depends(L_input_invgamma.param.value, U_input_invgamma.param.value, bulk_slider_invgamma.param.value)
 def invgamma_table(L, U, bulk):
     L, U, bulk = float(L), float(U), float(bulk)
-    α, β = find_invgamma(L, U, bulk=bulk/100, precision=10)
+    try:
+        α, β = find_invgamma(L, U, bulk=bulk/100, precision=10)
 
-    return pn.pane.Markdown(f"""
-        | param | value |
-        | ----- | ----- |
-        | α | {np.round(α, 4)} |
-        | β | {np.round(β, 4)} |
-        """, style={'border':'4px solid lightgrey', 'border-radius':'5px'}
-    )
+        return pn.pane.Markdown(f"""
+            | param | value |
+            | ----- | ----- |
+            | α | {np.round(α, 4)} |
+            | β | {np.round(β, 4)} |
+            """, style={'border':'4px solid lightgrey', 'border-radius':'5px'}
+        )
+    except:
+        return pn.pane.Markdown(f"""
+            | param | value |
+            | ----- | ----- |
+            | α     |       |
+            | β     |       |
+            """, style={'border':'4px solid lightgrey', 'border-radius':'5px'}
+        )
 @pn.depends(L_input_invgamma.param.value, U_input_invgamma.param.value, bulk_slider_invgamma.param.value)
 def dashboard_invgamma(L, U, bulk):
     L, U, bulk = float(L), float(U), float(bulk)
