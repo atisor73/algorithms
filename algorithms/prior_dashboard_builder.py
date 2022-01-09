@@ -39,6 +39,7 @@ from . import blurb_weibull
 from . import blurb_pareto
 from . import blurb_lognormal
 from . import blurb_cauchy
+from . import blurb_beta
 
 
 # *********************************** COLORS ***********************************
@@ -60,6 +61,7 @@ color_pareto = pink
 color_lognormal = "#7162EE"
 color_gumbel = "#C7545F"
 color_cauchy = "#B5A642"
+color_beta = "#000000"
 
 color_null = "#cccccc"
 
@@ -69,12 +71,15 @@ def _pdfcdf_2p2b_plotter(
     L, U, mu, sigma, f_pdf, f_cdf,
     x_patch, pdf_patch, cdf_patch,
     x_full, pdf_full, cdf_full,
-    color="purple", pad_left=False
+    color="purple", pad_left=False, pad_right=False
 ):
     x_range = (min(x_full), max(x_full))
     y_range = (-0.05, 1.05)
     if pad_left:
         x_range = (min(x_full) - 0.04*np.ptp(x_full), max(x_full))
+        y_range = (-0.07, 1.05)
+    if pad_right: # only used for the beta distribution
+        x_range = (min(x_full)-0.02, max(x_full)+0.02)
         y_range = (-0.07, 1.05)
 
     tools = 'pan,box_zoom,wheel_zoom,reset'
@@ -192,7 +197,7 @@ def _pdfcdf_2p2b_plotter(
 
     return row_pdfcdf
 
-# 1p1b: 1 parameter (function call), 1 boundary (1 circle)
+# 1p1b: 1 parameter (function call), 1 boundary (1 circle), expon and pareto
 def _pdfcdf_1p1b_plotter(
     U, beta, f_pdf, f_cdf,
     x_patch, pdf_patch, cdf_patch,
@@ -329,15 +334,11 @@ L_input_gumbel = pn.widgets.TextInput(name="L", value="1", width=130)
 U_input_gumbel = pn.widgets.TextInput(name="U", value="10", width=130)
 bulk_slider_gumbel = pn.widgets.FloatSlider(name="bulk %", value=99, start=50, end=99, width=150, step=1, value_throttled=True)
 
-# *********************************** NORMAL ***********************************
-@pn.depends(half_checkbox_normal.param.value, watch=True)
-def invisible_L_normal(half):
-    if half:
-        L_input_normal.value = "0"
-        L_input_normal.disabled = True
-    else:
-        L_input_normal.disabled = False
+L_input_beta = pn.widgets.TextInput(name="L", value="0.3", width=130)
+U_input_beta = pn.widgets.TextInput(name="U", value="0.6", width=130)
+bulk_slider_beta = pn.widgets.FloatSlider(name="bulk %", value=80, start=50, end=99, width=150, step=1, value_throttled=True)
 
+# ********************************** TABLES ************************************
 @pn.depends(L_input_normal.param.value, U_input_normal.param.value,
             bulk_slider_normal.param.value, half_checkbox_normal.param.value)
 def normal_table(L, U, bulk, half):
@@ -351,7 +352,7 @@ def normal_table(L, U, bulk, half):
 
         return pn.pane.Markdown(f"""
             | param | value |
-            | ----- | ----- |
+            | :-----: | ----- |
             | μ | {np.round(μ, 4)} |
             | σ | {np.round(σ, 4)} |
             """, style={'border':'4px solid lightgrey', 'border-radius':'5px'}
@@ -359,11 +360,240 @@ def normal_table(L, U, bulk, half):
     except:
         return pn.pane.Markdown(f"""
             | param | value |
-            | ----- | ----- |
+            | :-----: | ----- |
             | μ     |       |
             | σ     |       |
             """, style={'border':'4px solid lightgrey', 'border-radius':'5px'}
         )
+
+@pn.depends(L_input_lognormal.param.value, U_input_lognormal.param.value, bulk_slider_lognormal.param.value)
+def lognormal_table(L, U, bulk):
+    try:
+        L, U, bulk = float(L), float(U), float(bulk)
+        μ, σ = find_lognormal(L, U, bulk/100, precision=10)
+
+        return pn.pane.Markdown(f"""
+            | param | value |
+            | :-----: | ----- |
+            | μ | {np.round(μ, 4)} |
+            | σ | {np.round(σ, 4)} |
+            """, style={'border':'4px solid lightgrey', 'border-radius':'5px'}
+        )
+    except:
+        return pn.pane.Markdown(f"""
+            | param | value |
+            | :-----: | ----- |
+            |  μ    |       |
+            |  σ    |       |
+            """, style={'border':'4px solid lightgrey', 'border-radius':'5px'}
+        )
+
+@pn.depends(L_input_gamma.param.value, U_input_gamma.param.value, bulk_slider_gamma.param.value)
+def gamma_table(L, U, bulk):
+    try:
+        L, U, bulk = float(L), float(U), float(bulk)
+        α, β = find_gamma(L, U, bulk=bulk/100, precision=10)
+        return pn.pane.Markdown(f"""
+            | param | value |
+            | :-----: | ----- |
+            | α | {np.round(α, 4)} |
+            | β | {np.round(β, 4)} |
+            """, style={'border':'4px solid lightgrey', 'border-radius':'5px'}
+        )
+    except:
+        return pn.pane.Markdown(f"""
+            | param | value |
+            | :-----: | ----- |
+            | α     |       |
+            | β     |       |
+            """, style={'border':'4px solid lightgrey', 'border-radius':'5px'}
+        )
+
+@pn.depends(L_input_invgamma.param.value, U_input_invgamma.param.value, bulk_slider_invgamma.param.value)
+def invgamma_table(L, U, bulk):
+    try:
+        L, U, bulk = float(L), float(U), float(bulk)
+        α, β = find_invgamma(L, U, bulk=bulk/100, precision=10)
+
+        return pn.pane.Markdown(f"""
+            | param | value |
+            | :-----: | ----- |
+            | α | {np.round(α, 4)} |
+            | β | {np.round(β, 4)} |
+            """, style={'border':'4px solid lightgrey', 'border-radius':'5px'}
+        )
+    except:
+        return pn.pane.Markdown(f"""
+            | param | value |
+            | :-----: | ----- |
+            | α     |       |
+            | β     |       |
+            """, style={'border':'4px solid lightgrey', 'border-radius':'5px'}
+        )
+
+@pn.depends(L_input_weibull.param.value, U_input_weibull.param.value, bulk_slider_weibull.param.value)
+def weibull_table(L, U, bulk):
+    try:
+        L, U, bulk = float(L), float(U), float(bulk)
+        α, σ = find_weibull(L, U, bulk=bulk/100, precision=10)
+
+        return pn.pane.Markdown(f"""
+            | param | value |
+            | :-----: | ----- |
+            | α | {np.round(α, 4)} |
+            | σ | {np.round(σ, 4)} |
+            """, style={'border':'4px solid lightgrey', 'border-radius':'5px'}
+        )
+    except:
+        return pn.pane.Markdown(f"""
+            | param | value |
+            | :-----: | ----- |
+            | α     |       |
+            | σ     |       |
+            """, style={'border':'4px solid lightgrey', 'border-radius':'5px'}
+        )
+
+@pn.depends(U_input_expon.param.value, Uppf_slider_expon.param.value)
+def expon_table(U, Uppf):
+    try:
+        U, Uppf = float(U), float(Uppf)
+        β = find_exponential(U, Uppf/100, precision=10)
+        return pn.pane.Markdown(f"""
+            | param | value |
+            | :-----------: | ----------- |
+            | β | {np.round(β, 4)} |
+            """, style={'border':'4px solid lightgrey', 'border-radius':'5px'}
+        )
+    except:
+        return pn.pane.Markdown(f"""
+            | param | value |
+            | :-----------: | ----------- |
+            | β |    |
+            """, style={'border':'4px solid lightgrey', 'border-radius':'5px'}
+        )
+
+@pn.depends(ymin_input_pareto.param.value, U_input_pareto.param.value, Uppf_slider_pareto.param.value)
+def pareto_table(ymin, U, Uppf):
+    try:
+        ymin, U, Uppf = float(ymin), float(U), float(Uppf)
+        α = find_pareto(ymin, U, Uppf/100, precision=10)
+        return pn.pane.Markdown(f"""
+            | param | value |
+            | :-----------: | ----------- |
+            | α | {np.round(α, 4)} |
+            """, style={'border':'4px solid lightgrey', 'border-radius':'5px'}
+        )
+    except:
+        return pn.pane.Markdown(f"""
+            | param | value |
+            | :-----------: | ----------- |
+            | α           |             |
+            """, style={'border':'4px solid lightgrey', 'border-radius':'5px'}
+        )
+@pn.depends(L_input_cauchy.param.value, U_input_cauchy.param.value,
+            bulk_slider_cauchy.param.value, half_checkbox_cauchy.param.value)
+def cauchy_table(L, U, bulk, half):
+    try:
+        L, U, bulk = float(L), float(U), float(bulk)
+        if half:
+            μ, σ = find_cauchy(-U, U, bulk/100, precision=10)
+        else:
+            μ, σ = find_cauchy(L, U, bulk/100, precision=10)
+
+        return pn.pane.Markdown(f"""
+            | param | value |
+            | :-----: | ----- |
+            | μ | {np.round(μ, 4)} |
+            | σ | {np.round(σ, 4)} |
+            """, style={'border':'4px solid lightgrey', 'border-radius':'5px'}
+        )
+    except:
+        return pn.pane.Markdown(f"""
+            | param | value |
+            | :-----: | ----- |
+            | μ     |       |
+            | σ     |       |
+            """, style={'border':'4px solid lightgrey', 'border-radius':'5px'}
+        )
+
+@pn.depends(ν_input_studentt.param.value, L_input_studentt.param.value,
+            U_input_studentt.param.value, bulk_slider_studentt.param.value,
+            half_checkbox_studentt.param.value)
+def studentt_table(ν, L, U, bulk, half):
+    try:
+        ν, L, U, bulk = float(ν), float(L), float(U), float(bulk)
+        if half:
+            μ, σ = find_studentt(ν, -U, U, bulk/100, precision=10)
+        else:
+            μ, σ = find_studentt(ν, L, U, bulk/100, precision=10)
+
+        return pn.pane.Markdown(f"""
+            | param | value |
+            | :-----: | ----- |
+            | μ | {np.round(μ, 4)} |
+            | σ | {np.round(σ, 4)} |
+            """, style={'border':'4px solid lightgrey', 'border-radius':'5px'}
+        )
+    except:
+        return pn.pane.Markdown(f"""
+            | param | value |
+            | :-----: | ----- |
+            | μ     |       |
+            | σ     |       |
+            """, style={'border':'4px solid lightgrey', 'border-radius':'5px'}
+        )
+
+@pn.depends(L_input_gumbel.param.value, U_input_gumbel.param.value, bulk_slider_gumbel.param.value)
+def gumbel_table(L, U, bulk):
+    try:
+        L, U, bulk = float(L), float(U), float(bulk)
+        μ, σ = find_gumbel(L, U, bulk=bulk/100, precision=10)
+        return pn.pane.Markdown(f"""
+            | param | value |
+            | :-----: | ----- |
+            | μ | {np.round(μ, 4)} |
+            | σ | {np.round(σ, 4)} |
+            """, style={'border':'4px solid lightgrey', 'border-radius':'5px'}
+        )
+    except:
+        return pn.pane.Markdown(f"""
+            | param | value |
+            | :-----: | ----- |
+            | μ     |       |
+            | σ     |       |
+            """, style={'border':'4px solid lightgrey', 'border-radius':'5px'}
+    )
+
+@pn.depends(L_input_beta.param.value, U_input_beta.param.value, bulk_slider_beta.param.value)
+def beta_table(L, U, bulk):
+    try:
+        L, U, bulk = float(L), float(U), float(bulk)
+        α, β = find_beta(L, U, bulk=bulk/100, precision=10)
+        return pn.pane.Markdown(f"""
+            | param | value |
+            | :-----: | ----- |
+            | α | {np.round(α, 4)} |
+            | β | {np.round(β, 4)} |
+            """, style={'border':'4px solid lightgrey', 'border-radius':'5px'}
+        )
+    except:
+        return pn.pane.Markdown(f"""
+            | param | value |
+            | :-----: | ----- |
+            | α     |       |
+            | β     |       |
+            """, style={'border':'4px solid lightgrey', 'border-radius':'5px'}
+        )
+
+# *********************************** NORMAL ***********************************
+@pn.depends(half_checkbox_normal.param.value, watch=True)
+def invisible_L_normal(half):
+    if half:
+        L_input_normal.value = "0"
+        L_input_normal.disabled = True
+    else:
+        L_input_normal.disabled = False
+
 @pn.depends(L_input_normal.param.value, U_input_normal.param.value,
             bulk_slider_normal.param.value, half_checkbox_normal.param.value)
 def dashboard_normal(L, U, bulk, half):
@@ -424,29 +654,7 @@ def dashboard_normal(L, U, bulk, half):
 
     return row_pdfcdf
 
-
 # ********************************* LOG-NORMAL *********************************
-@pn.depends(L_input_lognormal.param.value, U_input_lognormal.param.value, bulk_slider_lognormal.param.value)
-def lognormal_table(L, U, bulk):
-    try:
-        L, U, bulk = float(L), float(U), float(bulk)
-        μ, σ = find_lognormal(L, U, bulk/100, precision=10)
-
-        return pn.pane.Markdown(f"""
-            | param | value |
-            | ----- | ----- |
-            | μ | {np.round(μ, 4)} |
-            | σ | {np.round(σ, 4)} |
-            """, style={'border':'4px solid lightgrey', 'border-radius':'5px'}
-        )
-    except:
-        return pn.pane.Markdown(f"""
-            | param | value |
-            | ----- | ----- |
-            |  μ    |       |
-            |  σ    |       |
-            """, style={'border':'4px solid lightgrey', 'border-radius':'5px'}
-        )
 @pn.depends(L_input_lognormal.param.value, U_input_lognormal.param.value, bulk_slider_lognormal.param.value)
 def dashboard_lognormal(L, U, bulk):
     try:
@@ -476,29 +684,7 @@ def dashboard_lognormal(L, U, bulk):
 
     return row_pdfcdf
 
-
 # *********************************** GAMMA ***********************************
-@pn.depends(L_input_gamma.param.value, U_input_gamma.param.value, bulk_slider_gamma.param.value)
-def gamma_table(L, U, bulk):
-    try:
-        L, U, bulk = float(L), float(U), float(bulk)
-        α, β = find_gamma(L, U, bulk=bulk/100, precision=10)
-        return pn.pane.Markdown(f"""
-            | param | value |
-            | ----- | ----- |
-            | α | {np.round(α, 4)} |
-            | β | {np.round(β, 4)} |
-            """, style={'border':'4px solid lightgrey', 'border-radius':'5px'}
-        )
-    except:
-        return pn.pane.Markdown(f"""
-            | param | value |
-            | ----- | ----- |
-            | α     |       |
-            | β     |       |
-            """, style={'border':'4px solid lightgrey', 'border-radius':'5px'}
-        )
-
 @pn.depends(L_input_gamma.param.value, U_input_gamma.param.value, bulk_slider_gamma.param.value)
 def dashboard_gamma(L, U, bulk):
     try:
@@ -528,29 +714,7 @@ def dashboard_gamma(L, U, bulk):
 
     return row_pdfcdf
 
-
 # ******************************* INVERSE GAMMA *******************************
-@pn.depends(L_input_invgamma.param.value, U_input_invgamma.param.value, bulk_slider_invgamma.param.value)
-def invgamma_table(L, U, bulk):
-    try:
-        L, U, bulk = float(L), float(U), float(bulk)
-        α, β = find_invgamma(L, U, bulk=bulk/100, precision=10)
-
-        return pn.pane.Markdown(f"""
-            | param | value |
-            | ----- | ----- |
-            | α | {np.round(α, 4)} |
-            | β | {np.round(β, 4)} |
-            """, style={'border':'4px solid lightgrey', 'border-radius':'5px'}
-        )
-    except:
-        return pn.pane.Markdown(f"""
-            | param | value |
-            | ----- | ----- |
-            | α     |       |
-            | β     |       |
-            """, style={'border':'4px solid lightgrey', 'border-radius':'5px'}
-        )
 @pn.depends(L_input_invgamma.param.value, U_input_invgamma.param.value, bulk_slider_invgamma.param.value)
 def dashboard_invgamma(L, U, bulk):
     try:
@@ -580,29 +744,7 @@ def dashboard_invgamma(L, U, bulk):
 
     return row_pdfcdf
 
-
 # ********************************** WEIBULL **********************************
-@pn.depends(L_input_weibull.param.value, U_input_weibull.param.value, bulk_slider_weibull.param.value)
-def weibull_table(L, U, bulk):
-    try:
-        L, U, bulk = float(L), float(U), float(bulk)
-        α, σ = find_weibull(L, U, bulk=bulk/100, precision=10)
-
-        return pn.pane.Markdown(f"""
-            | param | value |
-            | ----- | ----- |
-            | α | {np.round(α, 4)} |
-            | σ | {np.round(σ, 4)} |
-            """, style={'border':'4px solid lightgrey', 'border-radius':'5px'}
-        )
-    except:
-        return pn.pane.Markdown(f"""
-            | param | value |
-            | ----- | ----- |
-            | α     |       |
-            | σ     |       |
-            """, style={'border':'4px solid lightgrey', 'border-radius':'5px'}
-        )
 @pn.depends(L_input_weibull.param.value, U_input_weibull.param.value, bulk_slider_weibull.param.value)
 def dashboard_weibull(L, U, bulk):
     try:
@@ -632,26 +774,7 @@ def dashboard_weibull(L, U, bulk):
 
     return row_pdfcdf
 
-
 # ********************************* EXPONENTIAL *******************************
-@pn.depends(U_input_expon.param.value, Uppf_slider_expon.param.value)
-def expon_table(U, Uppf):
-    try:
-        U, Uppf = float(U), float(Uppf)
-        β = find_exponential(U, Uppf/100, precision=10)
-        return pn.pane.Markdown(f"""
-            | param | value |
-            | ----------- | ----------- |
-            | β | {np.round(β, 4)} |
-            """, style={'border':'4px solid lightgrey', 'border-radius':'5px'}
-        )
-    except:
-        return pn.pane.Markdown(f"""
-            | param | value |
-            | ----------- | ----------- |
-            | β |    |
-            """, style={'border':'4px solid lightgrey', 'border-radius':'5px'}
-        )
 @pn.depends(U_input_expon.param.value, Uppf_slider_expon.param.value)
 def dashboard_exponential(U, Uppf):
     try:
@@ -680,26 +803,7 @@ def dashboard_exponential(U, Uppf):
 
     return row_pdfcdf
 
-
 # *********************************** PARETO ***********************************
-@pn.depends(ymin_input_pareto.param.value, U_input_pareto.param.value, Uppf_slider_pareto.param.value)
-def pareto_table(ymin, U, Uppf):
-    try:
-        ymin, U, Uppf = float(ymin), float(U), float(Uppf)
-        α = find_pareto(ymin, U, Uppf/100, precision=10)
-        return pn.pane.Markdown(f"""
-            | param | value |
-            | ----------- | ----------- |
-            | α | {np.round(α, 4)} |
-            """, style={'border':'4px solid lightgrey', 'border-radius':'5px'}
-        )
-    except:
-        return pn.pane.Markdown(f"""
-            | param | value |
-            | ----------- | ----------- |
-            | α           |             |
-            """, style={'border':'4px solid lightgrey', 'border-radius':'5px'}
-        )
 @pn.depends(ymin_input_pareto.param.value, U_input_pareto.param.value, Uppf_slider_pareto.param.value)
 def dashboard_pareto(ymin, U, Uppf):
     try:
@@ -727,7 +831,6 @@ def dashboard_pareto(ymin, U, Uppf):
 
     return row_pdfcdf
 
-
 # *********************************** CAUCHY ***********************************
 @pn.depends(half_checkbox_cauchy.param.value, watch=True)
 def invisible_L_cauchy(half):
@@ -737,31 +840,6 @@ def invisible_L_cauchy(half):
     else:
         L_input_cauchy.disabled = False
 
-@pn.depends(L_input_cauchy.param.value, U_input_cauchy.param.value,
-            bulk_slider_cauchy.param.value, half_checkbox_cauchy.param.value)
-def cauchy_table(L, U, bulk, half):
-    try:
-        L, U, bulk = float(L), float(U), float(bulk)
-        if half:
-            μ, σ = find_cauchy(-U, U, bulk/100, precision=10)
-        else:
-            μ, σ = find_cauchy(L, U, bulk/100, precision=10)
-
-        return pn.pane.Markdown(f"""
-            | param | value |
-            | ----- | ----- |
-            | μ | {np.round(μ, 4)} |
-            | σ | {np.round(σ, 4)} |
-            """, style={'border':'4px solid lightgrey', 'border-radius':'5px'}
-        )
-    except:
-        return pn.pane.Markdown(f"""
-            | param | value |
-            | ----- | ----- |
-            | μ     |       |
-            | σ     |       |
-            """, style={'border':'4px solid lightgrey', 'border-radius':'5px'}
-        )
 @pn.depends(L_input_cauchy.param.value, U_input_cauchy.param.value,
             bulk_slider_cauchy.param.value, half_checkbox_cauchy.param.value)
 def dashboard_cauchy(L, U, bulk, half):
@@ -819,7 +897,6 @@ def dashboard_cauchy(L, U, bulk, half):
 
     return row_pdfcdf
 
-
 # ********************************* STUDENT-T *********************************
 @pn.depends(half_checkbox_studentt.param.value, watch=True)
 def invisible_L_studentt(half):
@@ -829,32 +906,7 @@ def invisible_L_studentt(half):
     else:
         L_input_studentt.disabled = False
 
-@pn.depends(ν_input_studentt.param.value, L_input_studentt.param.value,
-            U_input_studentt.param.value, bulk_slider_studentt.param.value,
-            half_checkbox_studentt.param.value)
-def studentt_table(ν, L, U, bulk, half):
-    try:
-        ν, L, U, bulk = float(ν), float(L), float(U), float(bulk)
-        if half:
-            μ, σ = find_studentt(ν, -U, U, bulk/100, precision=10)
-        else:
-            μ, σ = find_studentt(ν, L, U, bulk/100, precision=10)
 
-        return pn.pane.Markdown(f"""
-            | param | value |
-            | ----- | ----- |
-            | μ | {np.round(μ, 4)} |
-            | σ | {np.round(σ, 4)} |
-            """, style={'border':'4px solid lightgrey', 'border-radius':'5px'}
-        )
-    except:
-        return pn.pane.Markdown(f"""
-            | param | value |
-            | ----- | ----- |
-            | μ     |       |
-            | σ     |       |
-            """, style={'border':'4px solid lightgrey', 'border-radius':'5px'}
-        )
 @pn.depends(ν_input_studentt.param.value, L_input_studentt.param.value,
             U_input_studentt.param.value, bulk_slider_studentt.param.value,
             half_checkbox_studentt.param.value)
@@ -915,29 +967,7 @@ def dashboard_studentt(ν, L, U, bulk, half):
 
     return row_pdfcdf
 
-
 # *********************************** GUMBEL ***********************************
-@pn.depends(L_input_gumbel.param.value, U_input_gumbel.param.value, bulk_slider_gumbel.param.value)
-def gumbel_table(L, U, bulk):
-    try:
-        L, U, bulk = float(L), float(U), float(bulk)
-        μ, σ = find_gumbel(L, U, bulk=bulk/100, precision=10)
-        return pn.pane.Markdown(f"""
-            | param | value |
-            | ----- | ----- |
-            | μ | {np.round(μ, 4)} |
-            | σ | {np.round(σ, 4)} |
-            """, style={'border':'4px solid lightgrey', 'border-radius':'5px'}
-        )
-    except:
-        return pn.pane.Markdown(f"""
-            | param | value |
-            | ----- | ----- |
-            | μ     |       |
-            | σ     |       |
-            """, style={'border':'4px solid lightgrey', 'border-radius':'5px'}
-        )
-
 @pn.depends(L_input_gumbel.param.value, U_input_gumbel.param.value, bulk_slider_gumbel.param.value)
 def dashboard_gumbel(L, U, bulk):
     try:
@@ -967,12 +997,38 @@ def dashboard_gumbel(L, U, bulk):
 
     return row_pdfcdf
 
+# *********************************** BETA ***********************************
+@pn.depends(L_input_beta.param.value, U_input_beta.param.value, bulk_slider_beta.param.value)
+def dashboard_beta(L, U, bulk):
+    try:
+        L, U, bulk = float(L), float(U), float(bulk)
+        α, β, L, U = find_beta(L, U, bulk=bulk/100, precision=10, return_bounds=True)
+        color = color_beta
+    except:
+        α, β = 1, 1
+        color = color_null
 
+    f_pdf = lambda arr, alpha, beta: scipy.stats.beta.pdf(arr, alpha, beta)
+    f_cdf = lambda arr, alpha, beta: scipy.stats.beta.cdf(arr, alpha, beta)
 
+    x = np.linspace(L, U, 1_000)
+    x_low, x_high = 0, 1
+    x_full = np.linspace(0, 1, 1_000)
 
-#  *******************************************************************************************************
-#  ******************************************* FULL DASHBOARD ********************************************
-#  *******************************************************************************************************
+    pdf_full = f_pdf(x_full, α, β)
+    cdf_full = f_cdf(x_full, α, β)
+
+    x_patch = [L] + list(x) + [U]
+    pdf_patch = [0] + list(f_pdf(x, α, β)) + [0]
+    cdf_patch = [0] + list(f_cdf(x, α, β)) + [0]
+    row_pdfcdf = _pdfcdf_2p2b_plotter(L, U, α, β, f_pdf, f_cdf,
+        x_patch, pdf_patch, cdf_patch, x_full, pdf_full, cdf_full, color=color, pad_right=True)
+
+    return row_pdfcdf
+
+#  ***************************************************************************************
+#  *********************************** FULL DASHBOARD ************************************
+#  ***************************************************************************************
 row_LUbulk_normal = pn.Row(L_input_normal, U_input_normal, bulk_slider_normal,
     pn.Column(pn.Spacer(height=10), half_checkbox_normal), pn.Spacer(width=11), normal_table)
 row_LUbulk_lognormal = pn.Row(L_input_lognormal, U_input_lognormal,bulk_slider_lognormal, pn.Spacer(width=80), lognormal_table)
@@ -986,24 +1042,43 @@ row_LUbulk_cauchy = pn.Row(L_input_cauchy, U_input_cauchy, bulk_slider_cauchy,
 row_LUbulk_studentt = pn.Row(ν_input_studentt, L_input_studentt, U_input_studentt, bulk_slider_studentt,
     pn.Column(pn.Spacer(height=10), half_checkbox_studentt), pn.Spacer(width=10), studentt_table)
 row_LUbulk_gumbel = pn.Row(L_input_gumbel, U_input_gumbel, bulk_slider_gumbel, pn.Spacer(width=80), gumbel_table)
+row_LUbulk_beta = pn.Column(
+    pn.Spacer(height=1),
+    pn.Row(L_input_beta, U_input_beta, bulk_slider_beta, pn.Spacer(width=80), beta_table))
 
 
 def bayesian_priors(description=False):
     md_title = pn.pane.Markdown("""Constructing Priors""",
         style={"font-family":'GillSans', 'font-size':'24px'})
 
+    def wrap(x, name):
+        return pn.Row(pn.Spacer(width=1), pn.Column(*x), name=name)
     if description:
-        layout_normal = pn.Column(row_LUbulk_normal, dashboard_normal, blurb_normal.desc, name="Normal")
-        layout_lognormal = pn.Column(row_LUbulk_lognormal, dashboard_lognormal, blurb_lognormal.desc, name="LogNormal")
-        layout_gamma = pn.Column(row_LUbulk_gamma, dashboard_gamma, blurb_gamma.desc, name="Gamma")
-        layout_invgamma = pn.Column(row_LUbulk_invgamma, dashboard_invgamma, blurb_invgamma.desc, name="InvGamma")
-        layout_weibull = pn.Column(row_LUbulk_weibull, dashboard_weibull, blurb_weibull.desc, name="Weibull")
-        layout_expon = pn.Column(row_UUppf_expon, pn.Spacer(height=12),
-            dashboard_exponential, blurb_exponential.desc,  name="Exponential")
-        layout_pareto = pn.Column(row_UUppf_pareto, pn.Spacer(height=12), dashboard_pareto, blurb_pareto.desc, name="Pareto")
-        layout_cauchy = pn.Column(row_LUbulk_cauchy, dashboard_cauchy, blurb_cauchy.desc, name="Cauchy")
-        layout_studentt = pn.Column(row_LUbulk_studentt, dashboard_studentt, blurb_studentt.desc, name="StudentT")
-        layout_gumbel = pn.Column(row_LUbulk_gumbel, dashboard_gumbel, blurb_gumbel.desc, name="Gumbel")
+        # layout_normal = pn.Column(row_LUbulk_normal, dashboard_normal, blurb_normal.desc, name="Normal")
+        # layout_lognormal = pn.Column(row_LUbulk_lognormal, dashboard_lognormal, blurb_lognormal.desc, name="LogNormal")
+        # layout_gamma = pn.Column(row_LUbulk_gamma, dashboard_gamma, blurb_gamma.desc, name="Gamma")
+        # layout_invgamma = pn.Column(row_LUbulk_invgamma, dashboard_invgamma, blurb_invgamma.desc, name="InvGamma")
+        # layout_weibull = pn.Column(row_LUbulk_weibull, dashboard_weibull, blurb_weibull.desc, name="Weibull")
+        # layout_expon = pn.Column(row_UUppf_expon, pn.Spacer(height=12),
+        #     dashboard_exponential, blurb_exponential.desc,  name="Expon")
+        # layout_pareto = pn.Column(row_UUppf_pareto, pn.Spacer(height=12), dashboard_pareto, blurb_pareto.desc, name="Pareto")
+        # layout_cauchy = pn.Column(row_LUbulk_cauchy, dashboard_cauchy, blurb_cauchy.desc, name="Cauchy")
+        # layout_studentt = pn.Column(row_LUbulk_studentt, dashboard_studentt, blurb_studentt.desc, name="StudentT")
+        # layout_gumbel = pn.Column(row_LUbulk_gumbel, dashboard_gumbel, blurb_gumbel.desc, name="Gumbel")
+        # layout_beta = pn.Column(row_LUbulk_beta, dashboard_beta, blurb_beta.desc, name="Beta")
+
+        layout_normal = wrap([row_LUbulk_normal, dashboard_normal, blurb_normal.desc], "Normal")
+        layout_lognormal = wrap([row_LUbulk_lognormal, dashboard_lognormal, blurb_lognormal.desc], "LogNormal")
+        layout_gamma = wrap([row_LUbulk_gamma, dashboard_gamma, blurb_gamma.desc], "Gamma")
+        layout_invgamma = wrap([row_LUbulk_invgamma, dashboard_invgamma, blurb_invgamma.desc], "InvGamma")
+        layout_weibull = wrap([row_LUbulk_weibull, dashboard_weibull, blurb_weibull.desc], "Weibull")
+        layout_expon = wrap([row_UUppf_expon, pn.Spacer(height=12),
+            dashboard_exponential, blurb_exponential.desc], "Expon")
+        layout_pareto = wrap([row_UUppf_pareto, pn.Spacer(height=12), dashboard_pareto, blurb_pareto.desc], "Pareto")
+        layout_cauchy = wrap([row_LUbulk_cauchy, dashboard_cauchy, blurb_cauchy.desc], "Cauchy")
+        layout_studentt = wrap([row_LUbulk_studentt, dashboard_studentt, blurb_studentt.desc], "StudentT")
+        layout_gumbel = wrap([row_LUbulk_gumbel, dashboard_gumbel, blurb_gumbel.desc], "Gumbel")
+        layout_beta = wrap([row_LUbulk_beta, dashboard_beta, blurb_beta.desc], "Beta")
 
     else:
         layout_normal = pn.Column(row_LUbulk_normal, dashboard_normal, name="Normal")
@@ -1011,15 +1086,16 @@ def bayesian_priors(description=False):
         layout_gamma = pn.Column(row_LUbulk_gamma, dashboard_gamma, name="Gamma")
         layout_invgamma = pn.Column(row_LUbulk_invgamma, dashboard_invgamma, name="InvGamma")
         layout_weibull = pn.Column(row_LUbulk_weibull, dashboard_weibull, name="Weibull")
-        layout_expon = pn.Column(row_UUppf_expon, pn.Spacer(height=12), dashboard_exponential, name="Exponential")
+        layout_expon = pn.Column(row_UUppf_expon, pn.Spacer(height=12), dashboard_exponential, name="Expon")
         layout_pareto = pn.Column(row_UUppf_pareto, pn.Spacer(height=12), dashboard_pareto, name="Pareto")
         layout_cauchy = pn.Column(row_LUbulk_cauchy, dashboard_cauchy, name="Cauchy")
         layout_studentt = pn.Column(row_LUbulk_studentt, dashboard_studentt, name="StudentT")
         layout_gumbel = pn.Column(row_LUbulk_gumbel, dashboard_gumbel, name="Gumbel")
+        layout_beta = pn.Column(row_LUbulk_beta, dashboard_beta, name="Beta")
 
     tabs = pn.Tabs(
         layout_normal, layout_studentt, layout_expon, layout_gamma, layout_invgamma,
-        layout_gumbel, layout_weibull, layout_pareto, layout_lognormal, layout_cauchy)
+        layout_gumbel, layout_weibull, layout_pareto, layout_lognormal, layout_cauchy, layout_beta)
 
     prior_dashboard = pn.Column(md_title, tabs)
 

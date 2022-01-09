@@ -2,8 +2,8 @@ import bokeh.io
 import panel as pn
 
 # font-families worth trying: "Open Sans", "Computer Modern"
-blurb_style = {'color':'#555555', 'font-size': '14px', "font-family": 'Palatino'}
-frac_style = {'color':'#555555', 'font-size': '13px', "font-family": 'Palatino'}
+blurb_style = {'color':'#444444', 'font-size': '14px', "font-family": 'Palatino'}
+frac_style = {'color':'#444444', 'font-size': '13px', "font-family": 'Palatino'}
 
 # ****************************************************************************
 width_title, width_content = 80, 515
@@ -61,7 +61,7 @@ $F(y; \mu, \sigma)= e^{-e^{-(x-\mu)/\beta}}$
 
 m_moments_ = pn.pane.LaTeX(r"""
     mean: $\mu + \beta \gamma$, $\gamma$:
-        <a href="https://en.wikipedia.org/wiki/Euler%27s_constant">Euler's constant</a> <br>
+        <a href="https://en.wikipedia.org/wiki/Euler%27s_constant", target="_blank">Euler's constant</a> <br>
     variance: $\pi^2\beta^2/6$ <br><br>
     """, style=blurb_style, width=width_content, height=height_moments, margin=0)
 

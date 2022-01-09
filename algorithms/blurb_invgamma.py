@@ -2,18 +2,18 @@ import bokeh.io
 import panel as pn
 
 # font-families worth trying: "Open Sans", "Computer Modern"
-blurb_style = {'color':'#555555', 'font-size': '14px', "font-family": 'Palatino'}
-frac_style = {'color':'#555555', 'font-size': '13px', "font-family": 'Palatino'}
+blurb_style = {'color':'#444444', 'font-size': '14px', "font-family": 'Palatino'}
+frac_style = {'color':'#444444', 'font-size': '13px', "font-family": 'Palatino'}
 
 # ****************************************************************************
 width_title, width_content = 80, 515
-height_story = 40
-height_params = 60
-height_support = 40
-height_pdf = 55
-height_cdf = 55
-height_moments = 160
-height_usage = 60
+height_story = 30
+height_params = 50
+height_support = 30
+height_pdf = 45
+height_cdf = 45
+height_moments = 150
+height_usage = 50
 height_comments = 0
 
 

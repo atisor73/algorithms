@@ -7,12 +7,12 @@ frac_style = {'color':'#444444', 'font-size': '13px', "font-family": 'Palatino'}
 
 # ****************************************************************************
 width_title, width_content = 80, 515
-height_story = 105
-height_params = 30
+height_story = 90
+height_params = 50
 height_support = 30
-height_pdf = 30
-height_cdf = 30
-height_moments = 80
+height_pdf = 45
+height_cdf = 45
+height_moments = 85
 height_usage = 60
 height_comments = 0
 
@@ -39,33 +39,36 @@ m_comments = pn.pane.Markdown("""
 
 # RHS CONTENT
 m_story_ = pn.pane.LaTeX(r"""
-    Rare events occur with a rate $\beta$ per unit time. There is no “memory” of previous events; i.e., that rate is independent of time. A process that generates such events is called a Poisson process. The occurrence of a rare event in this context is referred to as an arrival. The inter-arrival time of a Poisson process is Exponentially distributed.<br><br>
+    Say you wait for two multistep Poisson processes to arive. The individual steps of each process happen at the same rate, but the first multistep process requires $\alpha$ steps and the second requires $\beta$ steps. The fraction of the total waiting time taken by the first process is Beta distributed.
+    <br><br>
     """, style=blurb_style, width=width_content, height=height_story, margin=0)
 
 m_params_ = pn.pane.LaTeX(r"""
-    $\beta$: average arrival rate, $(0, \infty)$ <br>
+    $\alpha$: # steps in first multi-step process, $(0, \infty)$ <br>
+    $\beta$: # steps in second multi-step process, $(0, \infty$) <br><br>
     """, style=blurb_style, width=width_content, height=height_params, margin=0)
 
 m_support_ = pn.pane.LaTeX("""
-    set of nonnegative real numbers $\mathbb{R}_{\geq 0}$ <br><br>
+    on the interval $[0, 1]$ <br><br>
     """, style=blurb_style, width=width_content, height=height_support, margin=0)
 
 m_pdf_ = pn.pane.LaTeX(r"""
- $f(y; \beta) = \beta e^{-\beta y}$ <br><br>
-    """, style=blurb_style, width=width_content, height=height_pdf, margin=0)
+    $f(\theta; \alpha, \beta) = \dfrac{\theta^{}(1-\theta)^{\beta-1}}{B(\alpha, \beta)}$, &nbsp; where &nbsp; $
+    B(\alpha, \beta) = \dfrac{\Gamma(\alpha) \Gamma(\beta)}{\Gamma(\alpha+\beta)} $<br><br>
+    """, style=frac_style, width=width_content, height=height_pdf, margin=0)
 
 m_cdf_ = pn.pane.LaTeX(r"""
-$F(y; \beta)= 1-e^{-\beta y}$
-    """, style=blurb_style, width=width_content, height=height_cdf, margin=0)
+    $F(\theta; \alpha, \beta) = I_x (\alpha, \beta) = \dfrac{B(\theta;\alpha, \beta)}{B(\alpha, \beta)}$
+    """,style=frac_style, width=width_content, height=height_cdf, margin=0)
 
 m_moments_ = pn.pane.LaTeX(r"""
-    $\mathrm{mean}$: $\dfrac{1}{\beta}$  <br>
-    $\mathrm{variance}$: $\dfrac{1}{\beta^2}$ <br><br>
+    $\mathrm{mean}$: $\dfrac{\alpha}{\alpha + \beta}$  <br>
+    $\mathrm{variance}$: $\dfrac{\alpha\beta}{(\alpha+\beta)^2(\alpha+\beta+1)}$ <br><br>
     """, style=frac_style, width=width_content, height=height_moments, margin=0)
 
 m_usage_ = pn.pane.LaTeX("""
-    SciPy: &nbsp;  <code>scipy.stats.expon(loc=0, scale=1/beta)</code> <br>
-    Stan: &nbsp;&nbsp;&nbsp; <code>exponential(beta)</code> <br>
+    SciPy: &nbsp;  <code>scipy.stats.beta(alpha, beta)</code> <br>
+    Stan: &nbsp;&nbsp;&nbsp; <code>beta(alpha, beta)</code> <br>
     """, style=blurb_style, width=width_content, height=height_usage, margin=0)
 
 m_comments_ = pn.pane.LaTeX("""

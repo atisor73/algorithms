@@ -4,7 +4,12 @@ import scipy.special
 import scipy.optimize
 
 # global declarations
+sqrt = np.sqrt
 sqrt2 = np.sqrt(2)
+betainc = scipy.special.betainc
+betaincinv = scipy.special.betaincinv
+gammainc = scipy.special.gammainc
+gammaincinv = scipy.special.gammaincinv
 Γ = scipy.special.gamma
 erfinv = scipy.special.erfinv
 
@@ -379,3 +384,75 @@ def find_gumbel(L, U, Lppf=0.005, Uppf=0.995, bulk=None, precision=4, return_bou
         return np.round(μ, precision), np.round(σ, precision), L_guess, U_guess
 
     return np.round(μ, precision), np.round(σ, precision)
+
+
+def find_beta(L, U, Lppf=0.025, Uppf=0.975, bulk=None, precision=4, return_bounds=False):
+    """
+    Beta Distribution
+    ----------------------
+    Pass in lower and upper values & ppf's (default 99%)
+    Returns desired α, β
+
+    Arguments
+    ----------------------
+    L: lower value (float)
+    U: upper value (float)
+    Lppf: lower ppf (float, (0, 1))
+    Uppf: upper ppf (float, (0, 1))
+    bulk: default None (overrides Lppf, Uppf), center mass
+    precision: integer to np.round() α, β (int)
+
+    Returns:
+    ----------------------
+    α: # of steps in first multi-step process, rounded to `precision` (float)
+    β: # of steps in second multi-setp process, rounded to `precision` (float)
+    """
+    if bulk is not None:
+        Lppf = (1-bulk)/2
+        Uppf = 1-(1-bulk)/2
+
+    a_low = (-L + sqrt(L))/2
+    b_low = (1/U-1)*(-L + sqrt(L))/2
+
+    def minimizer(x_range, y_range, ngrid, return_center=False):
+        x_mg, y_mg = np.meshgrid(x_range, y_range, indexing="ij")
+
+        terms = np.empty((ngrid, ngrid))
+        for i in range(ngrid):
+            for j in range(ngrid):
+                x, y = x_mg[i, j], y_mg[i, j]
+                L_guess, U_guess = scipy.stats.beta.ppf([Lppf, Uppf], x, y)
+                terms[i, j] = (L_guess-L)**2 + (U_guess-U)**2
+
+        _ = np.where(terms == np.min(terms))
+        i_good, j_good = int(np.average(_[0])), int(np.average(_[1]))
+        x_bounds = (x_mg[i_good-2, j_good], x_mg[i_good+2, j_good])
+        y_bounds = (y_mg[i_good, j_good-2], y_mg[i_good, j_good+2])
+
+        if return_center:
+            return x_mg[i_good, j_good], y_mg[i_good, j_good]
+
+        return x_bounds, y_bounds
+
+    ngrid = 50
+    a_range = np.logspace(np.log10(a_low), 3, ngrid)
+    b_range = np.logspace(np.log10(b_low), 3, ngrid)
+    a_bounds, b_bounds = minimizer(a_range, b_range, ngrid)
+
+    ngrid = 10
+    for _ in range(5):
+        a_range = np.linspace(*a_bounds, ngrid)
+        b_range = np.linspace(*b_bounds, ngrid)
+        a_bounds, b_bounds = minimizer(a_range, b_range, ngrid)
+
+    ngrid = 30
+    a_range = np.linspace(*a_bounds, ngrid)
+    b_range = np.linspace(*b_bounds, ngrid)
+    alpha, beta = minimizer(a_range, b_range, ngrid, return_center=True)
+
+    if return_bounds:
+        L_guess, U_guess = scipy.stats.beta.ppf([Lppf, Uppf], alpha, beta)
+
+        return np.round(alpha, precision), np.round(beta, precision), L_guess, U_guess
+
+    return np.round(alpha, precision), np.round(beta, precision)
