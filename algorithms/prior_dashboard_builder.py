@@ -683,6 +683,7 @@ def dashboard_lognormal(L, U, bulk):
     x = np.linspace(L, U, 1_000)
     x_low, x_high = scipy.stats.lognorm.ppf([0.05, 0.95], σ, loc=0, scale=np.exp(μ))
     x_full = np.linspace(max(0, L-padding), max(x_high, U+padding), 1_000)
+    x_full = np.sort(np.append(x_full, L))
 
     pdf_full = f_pdf(x_full, μ, σ)
     cdf_full = f_cdf(x_full, μ, σ)
@@ -711,8 +712,9 @@ def dashboard_gamma(L, U, bulk):
 
     padding = (U - L) * 0.3
     x = np.linspace(L, U, 1_000)
-    x_low, x_high = scipy.stats.gamma.ppf([0.005, 0.995], α, scale=1/β)
+    x_low, x_high = scipy.stats.gamma.ppf([0.025, 0.975], α, scale=1/β)
     x_full = np.linspace(max(0, L-padding), max(x_high, U+padding), 1_000)
+    x_full = np.sort(np.append(x_full, L))
 
     pdf_full = f_pdf(x_full, α, β)
     cdf_full = f_cdf(x_full, α, β)
@@ -741,8 +743,9 @@ def dashboard_invgamma(L, U, bulk):
 
     padding = (U - L) * 0.3
     x = np.linspace(L, U, 1_000)
-    x_low, x_high = scipy.stats.invgamma.ppf([0.025, 0.975], α, scale=β)
+    x_low, x_high = scipy.stats.invgamma.ppf([0.05, 0.95], α, scale=β)
     x_full = np.linspace(max(0, L-padding), max(x_high, U+padding), 1_000)
+    x_full = np.sort(np.append(x_full, L))
 
     pdf_full = f_pdf(x_full, α, β)
     cdf_full = f_cdf(x_full, α, β)
@@ -773,6 +776,7 @@ def dashboard_weibull(L, U, bulk):
     x = np.linspace(L, U, 1_000)
     x_low, x_high = scipy.stats.weibull_min.ppf([0.05, 0.95], α, scale=σ)
     x_full = np.linspace(max(0, L-padding), max(x_high, U+padding), 1_000)
+    x_full = np.sort(np.append(x_full, L))
 
     pdf_full = f_pdf(x_full, α, σ)
     cdf_full = f_cdf(x_full, α, σ)
@@ -917,7 +921,6 @@ def invisible_L_studentt(half):
     else:
         L_input_studentt.disabled = False
 
-
 @pn.depends(ν_input_studentt.param.value, L_input_studentt.param.value,
             U_input_studentt.param.value, bulk_slider_studentt.param.value,
             half_checkbox_studentt.param.value)
@@ -996,6 +999,7 @@ def dashboard_gumbel(L, U, bulk):
     x = np.linspace(L, U, 1_000)
     x_low, x_high = scipy.stats.gumbel_r.ppf([0.005, 0.995], loc=μ, scale=σ)
     x_full = np.linspace(min(x_low, L-padding), max(x_high, U+padding), 1_000)
+    x_full = np.sort(np.append(x_full, L))
 
     pdf_full = f_pdf(x_full, μ, σ)
     cdf_full = f_cdf(x_full, μ, σ)
@@ -1032,6 +1036,7 @@ def dashboard_beta(L, U, toggle, bulk, rnge):
     x = np.linspace(L, U, 1_000)
     x_low, x_high = 0, 1
     x_full = np.linspace(0, 1, 1_000)
+    x_full = np.sort(np.append(x_full, L))
 
     pdf_full = f_pdf(x_full, α, β)
     cdf_full = f_cdf(x_full, α, β)
