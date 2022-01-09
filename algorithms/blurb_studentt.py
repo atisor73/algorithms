@@ -8,12 +8,12 @@ frac_style = {'color':'#444444', 'font-size': '13px', "font-family": 'Palatino'}
 # ****************************************************************************
 width_title, width_content = 80, 515
 height_story = 65
-height_params = 75
+height_params = 70
 height_support = 40
 height_pdf = 55
 height_cdf = 55
 height_moments = 150
-height_usage = 40
+height_usage = 60
 height_comments = 0
 
 

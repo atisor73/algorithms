@@ -151,7 +151,7 @@ def _pdfcdf_2p2b_plotter(
     cds_curves = bokeh.models.ColumnDataSource(data={"x_full": x_full, "cdf_full": cdf_full})
     g_cdf = bokeh.models.Line(x="x_full", y="cdf_full", line_alpha=0.0)
     g_r_cdf = p_cdf.add_glyph(source_or_glyph=cds_curves, glyph=g_cdf)
-    g_hover_cdf = bokeh.models.HoverTool(renderers=[g_r_cdf], mode='hline', line_policy="nearest",
+    g_hover_cdf = bokeh.models.HoverTool(renderers=[g_r_cdf], mode='vline', line_policy="nearest",
         tooltips=f"""<div><div><div>
             <span style="font-size: 13px; font-family: Helvetica; color: {color}; font-weight: bold;"> &nbsp;&nbsp; y: </span>
             <span style="font-size: 13px; font-family: Helvetica; color: black"> @x_full </span> <br>
@@ -334,9 +334,20 @@ L_input_gumbel = pn.widgets.TextInput(name="L", value="1", width=130)
 U_input_gumbel = pn.widgets.TextInput(name="U", value="10", width=130)
 bulk_slider_gumbel = pn.widgets.FloatSlider(name="bulk %", value=99, start=50, end=99, width=150, step=1, value_throttled=True)
 
-L_input_beta = pn.widgets.TextInput(name="L", value="0.3", width=130)
-U_input_beta = pn.widgets.TextInput(name="U", value="0.6", width=130)
-bulk_slider_beta = pn.widgets.FloatSlider(name="bulk %", value=80, start=50, end=99, width=150, step=1, value_throttled=True)
+L_input_beta = pn.widgets.TextInput(name="L", value="0.1", width=130)
+U_input_beta = pn.widgets.TextInput(name="U", value="0.9", width=130)
+toggle_beta = pn.widgets.RadioButtonGroup(options=["center", "asymm"], width=150, height=30) # get inline F
+bulk_slider_beta = pn.widgets.FloatSlider(name="bulk %", value=75, start=50, end=99,
+    step=1, value_throttled=True, width=150, margin=(6, 10, 0, 10))
+range_slider_beta = pn.widgets.RangeSlider(name="bulk %", start=1, end=99, step=1,
+    value=(5, 85), width=150, visible=False, value_throttled=True, margin=(6, 10, 0, 10))
+
+@pn.depends(toggle_beta.param.value, watch=True)
+def invisible_bulkrangeslider_beta(toggle):
+    if toggle == "center":
+        range_slider_beta.visible, bulk_slider_beta.visible = False, True
+    elif toggle == "asymm":
+        bulk_slider_beta.visible, range_slider_beta.visible = False, True
 
 # ********************************** TABLES ************************************
 @pn.depends(L_input_normal.param.value, U_input_normal.param.value,
@@ -998,11 +1009,18 @@ def dashboard_gumbel(L, U, bulk):
     return row_pdfcdf
 
 # *********************************** BETA ***********************************
-@pn.depends(L_input_beta.param.value, U_input_beta.param.value, bulk_slider_beta.param.value)
-def dashboard_beta(L, U, bulk):
+@pn.depends(L_input_beta.param.value, U_input_beta.param.value, toggle_beta.param.value,
+    bulk_slider_beta.param.value, range_slider_beta.param.value)
+def dashboard_beta(L, U, toggle, bulk, rnge):
     try:
-        L, U, bulk = float(L), float(U), float(bulk)
-        α, β, L, U = find_beta(L, U, bulk=bulk/100, precision=10, return_bounds=True)
+        L, U = float(L), float(U)
+        if toggle == "center":
+            α, β, L, U = find_beta(L, U, bulk=bulk/100, precision=10, return_bounds=True)
+
+        if toggle == "asymm":
+            Lppf, Uppf = rnge[0], rnge[1]
+            α, β, L, U = find_beta(L, U, Lppf=Lppf/100, Uppf=Uppf/100, bulk=None,
+                precision=10, return_bounds=True)
         color = color_beta
     except:
         α, β = 1, 1
@@ -1029,22 +1047,34 @@ def dashboard_beta(L, U, bulk):
 #  ***************************************************************************************
 #  *********************************** FULL DASHBOARD ************************************
 #  ***************************************************************************************
+row_LUbulk_beta = pn.Row(
+    pn.Spacer(width=5),
+    pn.Column(pn.Spacer(height=0), L_input_beta),
+    pn.Column(pn.Spacer(height=0), U_input_beta),
+    pn.Spacer(width=5),
+    pn.Column(pn.Row(bulk_slider_beta, range_slider_beta), toggle_beta),
+    pn.Spacer(width=50), beta_table)
+
 row_LUbulk_normal = pn.Row(L_input_normal, U_input_normal, bulk_slider_normal,
     pn.Column(pn.Spacer(height=10), half_checkbox_normal), pn.Spacer(width=11), normal_table)
-row_LUbulk_lognormal = pn.Row(L_input_lognormal, U_input_lognormal,bulk_slider_lognormal, pn.Spacer(width=80), lognormal_table)
-row_LUbulk_gamma = pn.Row(L_input_gamma, U_input_gamma, bulk_slider_gamma, pn.Spacer(width=80), gamma_table)
-row_LUbulk_invgamma = pn.Row(L_input_invgamma, U_input_invgamma, bulk_slider_invgamma, pn.Spacer(width=80), invgamma_table)
-row_LUbulk_weibull = pn.Row(L_input_weibull, U_input_weibull, bulk_slider_weibull, pn.Spacer(width=80), weibull_table)
-row_UUppf_expon = pn.Row(U_input_expon, Uppf_slider_expon, pn.Spacer(width=230), expon_table)
-row_UUppf_pareto = pn.Row(ymin_input_pareto, U_input_pareto, Uppf_slider_pareto, pn.Spacer(width=140), pareto_table)
+row_LUbulk_lognormal = pn.Row(L_input_lognormal, U_input_lognormal,
+    bulk_slider_lognormal, pn.Spacer(width=80), lognormal_table)
+row_LUbulk_gamma = pn.Row(L_input_gamma, U_input_gamma, bulk_slider_gamma,
+    pn.Spacer(width=80), gamma_table)
+row_LUbulk_invgamma = pn.Row(L_input_invgamma, U_input_invgamma,
+    bulk_slider_invgamma, pn.Spacer(width=80), invgamma_table)
+row_LUbulk_weibull = pn.Row(L_input_weibull, U_input_weibull,
+    bulk_slider_weibull, pn.Spacer(width=80), weibull_table)
+row_UUppf_expon = pn.Row(U_input_expon, Uppf_slider_expon,
+    pn.Spacer(width=230), expon_table)
+row_UUppf_pareto = pn.Row(ymin_input_pareto, U_input_pareto,
+    Uppf_slider_pareto, pn.Spacer(width=140), pareto_table)
 row_LUbulk_cauchy = pn.Row(L_input_cauchy, U_input_cauchy, bulk_slider_cauchy,
     pn.Column(pn.Spacer(height=10), half_checkbox_cauchy), pn.Spacer(width=10), cauchy_table)
 row_LUbulk_studentt = pn.Row(ν_input_studentt, L_input_studentt, U_input_studentt, bulk_slider_studentt,
     pn.Column(pn.Spacer(height=10), half_checkbox_studentt), pn.Spacer(width=10), studentt_table)
-row_LUbulk_gumbel = pn.Row(L_input_gumbel, U_input_gumbel, bulk_slider_gumbel, pn.Spacer(width=80), gumbel_table)
-row_LUbulk_beta = pn.Column(
-    pn.Spacer(height=1),
-    pn.Row(L_input_beta, U_input_beta, bulk_slider_beta, pn.Spacer(width=80), beta_table))
+row_LUbulk_gumbel = pn.Row(L_input_gumbel, U_input_gumbel, bulk_slider_gumbel,
+    pn.Spacer(width=80), gumbel_table)
 
 
 def bayesian_priors(description=False):
@@ -1053,20 +1083,9 @@ def bayesian_priors(description=False):
 
     def wrap(x, name):
         return pn.Row(pn.Spacer(width=1), pn.Column(*x), name=name)
-    if description:
-        # layout_normal = pn.Column(row_LUbulk_normal, dashboard_normal, blurb_normal.desc, name="Normal")
-        # layout_lognormal = pn.Column(row_LUbulk_lognormal, dashboard_lognormal, blurb_lognormal.desc, name="LogNormal")
-        # layout_gamma = pn.Column(row_LUbulk_gamma, dashboard_gamma, blurb_gamma.desc, name="Gamma")
-        # layout_invgamma = pn.Column(row_LUbulk_invgamma, dashboard_invgamma, blurb_invgamma.desc, name="InvGamma")
-        # layout_weibull = pn.Column(row_LUbulk_weibull, dashboard_weibull, blurb_weibull.desc, name="Weibull")
-        # layout_expon = pn.Column(row_UUppf_expon, pn.Spacer(height=12),
-        #     dashboard_exponential, blurb_exponential.desc,  name="Expon")
-        # layout_pareto = pn.Column(row_UUppf_pareto, pn.Spacer(height=12), dashboard_pareto, blurb_pareto.desc, name="Pareto")
-        # layout_cauchy = pn.Column(row_LUbulk_cauchy, dashboard_cauchy, blurb_cauchy.desc, name="Cauchy")
-        # layout_studentt = pn.Column(row_LUbulk_studentt, dashboard_studentt, blurb_studentt.desc, name="StudentT")
-        # layout_gumbel = pn.Column(row_LUbulk_gumbel, dashboard_gumbel, blurb_gumbel.desc, name="Gumbel")
-        # layout_beta = pn.Column(row_LUbulk_beta, dashboard_beta, blurb_beta.desc, name="Beta")
 
+
+    if description:
         layout_normal = wrap([row_LUbulk_normal, dashboard_normal, blurb_normal.desc], "Normal")
         layout_lognormal = wrap([row_LUbulk_lognormal, dashboard_lognormal, blurb_lognormal.desc], "LogNormal")
         layout_gamma = wrap([row_LUbulk_gamma, dashboard_gamma, blurb_gamma.desc], "Gamma")
@@ -1081,17 +1100,17 @@ def bayesian_priors(description=False):
         layout_beta = wrap([row_LUbulk_beta, dashboard_beta, blurb_beta.desc], "Beta")
 
     else:
-        layout_normal = pn.Column(row_LUbulk_normal, dashboard_normal, name="Normal")
-        layout_lognormal = pn.Column(row_LUbulk_lognormal, dashboard_lognormal, name="LogNormal")
-        layout_gamma = pn.Column(row_LUbulk_gamma, dashboard_gamma, name="Gamma")
-        layout_invgamma = pn.Column(row_LUbulk_invgamma, dashboard_invgamma, name="InvGamma")
-        layout_weibull = pn.Column(row_LUbulk_weibull, dashboard_weibull, name="Weibull")
-        layout_expon = pn.Column(row_UUppf_expon, pn.Spacer(height=12), dashboard_exponential, name="Expon")
-        layout_pareto = pn.Column(row_UUppf_pareto, pn.Spacer(height=12), dashboard_pareto, name="Pareto")
-        layout_cauchy = pn.Column(row_LUbulk_cauchy, dashboard_cauchy, name="Cauchy")
-        layout_studentt = pn.Column(row_LUbulk_studentt, dashboard_studentt, name="StudentT")
-        layout_gumbel = pn.Column(row_LUbulk_gumbel, dashboard_gumbel, name="Gumbel")
-        layout_beta = pn.Column(row_LUbulk_beta, dashboard_beta, name="Beta")
+        layout_normal = wrap([row_LUbulk_normal, dashboard_normal], "Normal")
+        layout_lognormal = wrap([row_LUbulk_lognormal, dashboard_lognormal], "LogNormal")
+        layout_gamma = wrap([row_LUbulk_gamma, dashboard_gamma], "Gamma")
+        layout_invgamma = wrap([row_LUbulk_invgamma, dashboard_invgamma], "InvGamma")
+        layout_weibull = wrap([row_LUbulk_weibull, dashboard_weibull], "Weibull")
+        layout_expon = wrap([row_UUppf_expon, pn.Spacer(height=12), dashboard_exponential], "Expon")
+        layout_pareto = wrap([row_UUppf_pareto, pn.Spacer(height=12), dashboard_pareto], "Pareto")
+        layout_cauchy = wrap([row_LUbulk_cauchy, dashboard_cauchy], "Cauchy")
+        layout_studentt = wrap([row_LUbulk_studentt, dashboard_studentt], "StudentT")
+        layout_gumbel = wrap([row_LUbulk_gumbel, dashboard_gumbel], "Gumbel")
+        layout_beta = wrap([row_LUbulk_beta, dashboard_beta], "Beta")
 
     tabs = pn.Tabs(
         layout_normal, layout_studentt, layout_expon, layout_gamma, layout_invgamma,

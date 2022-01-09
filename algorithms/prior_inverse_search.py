@@ -138,7 +138,8 @@ def find_gamma(L, U, Lppf=0.005, Uppf=0.995, bulk=None, precision=4, return_boun
                   scipy.special.gammaincinv(α, Uppf) - L/U
 
     # locate sign change for brentq (for α search)...
-    α_ = np.arange(1000)               # might change to logspace????? how to pick upper bound???
+    α_ = np.arange(1000, dtype=float)
+    α_ = np.insert(α_, 1, 0.5)
     arr_sgn = np.sign(f(α_))
     i_ = np.where(arr_sgn[:-1] + arr_sgn[1:]==0)[0][0]
     bracket_low, bracket_high = α_[i_: i_+2]
@@ -183,7 +184,8 @@ def find_invgamma(L, U, Lppf=0.005, Uppf=0.995, bulk=None, precision=4, return_b
                   scipy.special.gammainccinv(α, Uppf) - (U/L)
 
     # locate sign change for brentq (for α search)...
-    α_ = np.arange(1_000)           # might change to logspace????? how to pick upper bound???
+    α_ = np.arange(1_000, dtype=float)
+    α_ = np.insert(α_, 1, 0.5)
     arr_sgn = np.sign(f(α_))
     i_ = np.where(arr_sgn[:-1] + arr_sgn[1:]==0)[0][0]
     bracket_low, bracket_high = α_[i_: i_+2]
