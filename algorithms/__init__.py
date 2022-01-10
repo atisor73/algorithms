@@ -9,6 +9,7 @@ from .numerics import *
 from .distributions import *
 from .prior_inverse_search import *
 from .prior_dashboard_builder import bayesian_priors
+from .swarmplotter import swarmplot, swarm
 
 from . import blurb_normal
 from . import blurb_studentt
