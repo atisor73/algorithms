@@ -1,18 +1,31 @@
-def map_palette(q, palette):
+def map_palette(q, palette, nan_color='#000000'):
     """
     Arguments
     ---------------
     q: 1D quantitative axis, numpy array
-    palette: color palette to map to 
+    palette: color palette to map to
     
     Returns
     ---------------
     colors: list of mapped colors
     """
-    indices = ((q - q.min())/(q.max() - q.min()) \
+    q_min = np.nanmin(q)
+    q_max = np.nanmax(q)
+    
+    indices = ((q - q_min)/(q_max - q_min) \
                * (len(palette)-1)).astype(int)
-    colors = [palette[i] for i in indices]
+    
+    colors = []
+    for i in indices:
+        try:
+            color = palette[i]
+        except:
+            color = nan_color
+        colors.append(color)
+        
+    
     return colors
+
 
 
 
