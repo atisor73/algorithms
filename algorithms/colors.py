@@ -1,3 +1,5 @@
+import numpy as np
+
 def map_palette(q, palette, nan_color='#000000'):
     """
     Arguments
