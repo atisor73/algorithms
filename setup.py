@@ -4,7 +4,7 @@ long_description = "Algorithms is a local package for functions I use regularly.
 
 setup(
     name="algorithms",
-    version="0.0.3",
+    version="0.0.7",
     description="Algorithms is a local package for functions I use regularly.",
     long_description=long_description,
     license="MIT",
