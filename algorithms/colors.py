@@ -11,6 +11,8 @@ def map_palette(q, palette, nan_color='#000000'):
     ---------------
     colors: list of mapped colors
     """
+    if type(q) is list:
+        q = np.array(q)
     q_min = np.nanmin(q)
     q_max = np.nanmax(q)
     
@@ -19,10 +21,10 @@ def map_palette(q, palette, nan_color='#000000'):
     
     colors = []
     for i in indices:
-        try:
-            color = palette[i]
-        except:
+        if np.isnan(i):
             color = nan_color
+        else:
+            color = palette[i]
         colors.append(color)
         
     
@@ -31,8 +33,8 @@ def map_palette(q, palette, nan_color='#000000'):
 
 
 
-def map_palette_thresh(q, palette, max_thresh='inf', max_color="#000000",
-                       min_thresh='-inf', min_color="#ffffff"):
+def map_palette_thresh(q, palette, max_thresh='inf', max_color=None,
+                       min_thresh='-inf', min_color=None, nan_color='#000000'):
     """
     Useful for creating legends.
     
@@ -45,18 +47,30 @@ def map_palette_thresh(q, palette, max_thresh='inf', max_color="#000000",
     ---------------
     colors: list of mapped colors
     """
+    
+    if max_color is None:
+        max_color = palette[-1]
+    if min_color is None:
+        min_color = palette[0]
+        
+    if type(q) is list:
+        q = np.array(q)
+        
     if max_thresh == 'inf':
-        max_thresh = q.max()
+        max_thresh = np.nanmax(q)
     if min_thresh == '-inf':
-        min_thresh = q.min()
+        min_thresh = np.nanmin(q)
     
     colors = []
     for v in q:
-        if v > max_thresh: c = max_color
-        elif v < min_thresh: c = min_color
+        if np.isnan(v):
+            c = nan_color
+        elif v >= max_thresh: c = max_color
+        elif v <= min_thresh: c = min_color
         else:
             i = ((v - min_thresh)/(max_thresh - min_thresh) \
-               * (len(palette)-1)).astype(int)
-            c = palette[i]
+               * (len(palette)-1))
+            c = palette[int(i)]
+            
         colors.append(c)
     return colors

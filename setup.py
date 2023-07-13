@@ -1,10 +1,10 @@
 from setuptools import setup, find_packages
 
-long_description = "Algorithms is a local package for functions I keep using but am too tired to rewrite or can't seem to remember."
+long_description = "Algorithms is a local package for functions I use regularly."
 
 setup(
     name="algorithms",
-    version="0.0.2",
+    version="0.0.3",
     description="Algorithms is a local package for functions I use regularly.",
     long_description=long_description,
     license="MIT",
