@@ -23,6 +23,6 @@ from . import blurb_lognormal
 from . import blurb_cauchy
 
 __author__ = "Rosita Fu"
-__version__ = "0.0.2"
+__version__ = "0.0.7"
 __license__ = "MIT"
 __email__ = "rosita.fu99@gmail.com"
